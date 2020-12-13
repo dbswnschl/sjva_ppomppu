@@ -1,35 +1,50 @@
 {% extends "base.html" %}
 {% block content %}
 <div>
-  {{ macros.m_button_group([['global_setting_save_btn', '설정 저장']])}}
-  {{ macros.m_row_start('5') }}
-  {{ macros.m_row_end() }}
-  <nav>
-    {{ macros.m_tab_head_start() }}
-      {{ macros.m_tab_head2('normal', '일반', true) }}
-      {{ macros.m_tab_head2('action', '기타', false) }}
-    {{ macros.m_tab_head_end() }}
-  </nav>
-  <form id='setting' name='setting'>
-  <div class="tab-content" id="nav-tabContent">
-     {{ macros.m_tab_content_start('normal', true) }}
-      {{ macros.setting_global_scheduler_button(arg['scheduler'], arg['is_running']) }}
-      {{ macros.setting_input_text('interval', '스케쥴링 실행 정보', value=arg['interval'], col='3', desc=['Inverval(minute 단위)이나 Cron 설정']) }}
-      {{ macros.setting_checkbox('auto_start', '시작시 자동실행', value=arg['auto_start'], desc='On : 시작시 자동으로 스케쥴러에 등록됩니다.') }}
-          {{ macros.m_tab_content_end() }}
-    {{ macros.m_tab_content_start('action', false) }}
-      {{ macros.setting_button([['global_one_execute_btn', '1회 실행']], left='1회 실행' ) }}
-      {{ macros.setting_button([['global_reset_db_btn', '목록 전체 지우기']], left='DB정리' ) }}
-    {{ macros.m_tab_content_end() }}
-  </div><!--tab-content-->
-  </form>
+    {{ macros.m_button_group([['global_setting_save_btn', '설정 저장']])}}
+    {{ macros.m_row_start('5') }}
+    {{ macros.m_row_end() }}
+    <nav>
+        {{ macros.m_tab_head_start() }}
+        {{ macros.m_tab_head2('normal', '일반', true) }}
+        {{ macros.m_tab_head2('action', '기타', false) }}
+        {{ macros.m_tab_head_end() }}
+    </nav>
+    <form id='setting' name='setting'>
+        <div class="tab-content" id="nav-tabContent">
+            {{ macros.m_tab_content_start('normal', true) }}
+            {{ macros.setting_global_scheduler_button(arg['scheduler'], arg['is_running']) }}
+            {{ macros.setting_input_text('rss_url', '뽐뿌 RSS URL', value=arg['rss_url'], placeholder=arg['rss_url'],
+            desc='뽐뿌 RSS URL 입력') }}
+            {{ macros.setting_input_text('include_keyword', '포함 키워드', value=arg['include_keyword'],
+            placeholder=arg['include_keyword'], desc=['포함 키워드','/정규식/ 사용 가능','쉼표(,)로 여러개 입력 가능']) }}
+            {{ macros.setting_checkbox('include_all', '전체 포함', value=arg['include_all'], desc='On : 모든 키워드에 대해서 알람 설정을
+            포함 합니다.') }}
+            {{ macros.setting_input_text('exclude_keyword', '제외 키워드', value=arg['exclude_keyword'],
+            placeholder=arg['exclude_keyword'], desc=['제외 키워드','/정규식/ 사용 가능','쉼표(,)로 여러개 입력 가능']) }}
+            {{ macros.setting_input_text('bot_id', '알람 봇 ID', value=arg['bot_id'],
+            placeholder=arg['bot_id'], desc=['봇 ID 입력', 'default ID : bot_sjva_ppomppu']) }}
+            {{ macros.setting_input_text('message_format', '메시지 포맷', value=arg['message_format'],
+            placeholder=arg['exclude_keyword'], desc=['알림 받을 메시지의 포맷, {키워드} 로 사용', 'title : 제목', 'link :
+            게시글 주소', 'description : 설명', 'pub_date: 생성시각', '예시 : [{title}] : {link}']) }}
+            {{ macros.setting_input_text('interval', '스케쥴링 실행 정보', value=arg['interval'], col='3',
+            desc=['Inverval(minute 단위)이나 Cron 설정']) }}
+            {{ macros.setting_checkbox('auto_start', '시작시 자동실행', value=arg['auto_start'], desc='On : 시작시 자동으로 스케쥴러에
+            등록됩니다.') }}
+            {{ macros.m_tab_content_end() }}
+            {{ macros.m_tab_content_start('action', false) }}
+            {{ macros.setting_button([['global_one_execute_btn', '1회 실행']], left='1회 실행' ) }}
+            {{ macros.setting_button([['global_reset_db_btn', '목록 전체 지우기']], left='DB정리' ) }}
+            {{ macros.m_tab_content_end() }}
+        </div><!--tab-content-->
+    </form>
 </div> <!--전체-->
 
 <script type="text/javascript">
-var package_name = "{{arg['package_name'] }}";
+    var package_name = "{{arg['package_name'] }}";
 
-$(document).ready(function(){
-});
+    $(document).ready(function () {
+    });
 
 </script>
 {% endblock %}

@@ -1,10 +1,119 @@
 {% extends "base.html" %}
 {% block content %}
-    <div>
-        <form id="setting">
-
-            {{ macros.setting_button([['global_setting_save_btn', '저장']]) }}
-        </form>
+<div>
+  <form id="form_search" class="form-inline" style="text-align:left">
+    <div class="container-fluid">
+      <div class="row show-grid">
+        <span class="col-md-6">
+          <select id="order" name="order" class="form-control form-control-sm">
+            <option value="desc">최근순</option>
+            <option value="asc">오래된순</option>
+          </select>
+          <select id="option" name="option" class="form-control form-control-sm">
+            <option value="all">전체</option>
+            <option value="wait">🕛판단 이전</option>
+            <option value="true">✔조건일치 - 알람 요청</option>
+            <option value="false">⛔조건불일치 - 알람 패스</option>
+          </select>
+        </span>
+        <span class="col-md-6">
+          <input id="search_word" name="search_word" class="form-control form-control-sm w-75" type="text" placeholder="글제목 or 설명 or 작성자" aria-label="Search">
+          <button id="search" class="btn btn-sm btn-outline-success">검색</button>
+          <button id="reset_btn" class="btn btn-sm btn-outline-success">리셋</button>
+        </span>
+      </div>
     </div>
+  </form>
+<div id='page1'></div>
+  {{ macros.m_hr_head_top() }}
+  {{ macros.m_row_start('0') }}
+  {{ macros.m_col(2,  macros.m_strong('Poster')) }}
+  {{ macros.m_col(10,  macros.m_strong('Info')) }}
+  {{ macros.m_row_end() }}
+  {{ macros.m_hr_head_bottom() }}
+  <div id="list_div"></div>
+  <div id='page2'></div>
+</div>
 
+<script type="text/javascript">
+var package_name = "{{arg['package_name'] }}";
+var current_data = null;
+
+
+
+$(document).ready(function(){
+  request_search('1');
+});
+
+$("#search").click(function(e) {
+  e.preventDefault();
+  request_search('1');
+});
+
+$("body").on('click', '#page', function(e){
+  e.preventDefault();
+  request_search($(this).data('page'));
+});
+
+$("#reset_btn").click(function(e) {
+  e.preventDefault();
+  document.getElementById("order").value = 'desc';
+  document.getElementById("option").value = 'all';
+  document.getElementById("search_word").value = '';
+  request_search('1')
+});
+
+function request_search(page, move_top=true) {
+  var formData = get_formdata('#form_search')
+  formData += '&page=' + page;
+  $.ajax({
+    url: '/' + package_name + '/ajax/web_list',
+    type: "POST",
+    cache: false,
+    data: formData,
+    dataType: "json",
+    success: function (data) {
+      current_data = data;
+      if (move_top)
+        window.scrollTo(0,0);
+      make_list(data.list)
+      make_page_html(data.paging)
+    }
+  });
+}
+
+function make_list(data) {
+  for (i in data) {
+      str += m_row_start();
+      str += m_col(2, data[i].rss_id);
+      right = m_row_start();
+      tmp = ''
+      tmp += '<strong>제목 : </strong>' + data[i].title + '<br>';
+      tmp += `<strong>링크 : </strong><a href="${data[i].link}">${data[i].link}</a><br>`;
+      tmp += '<strong>작성자 : </strong>' + data[i].author + '<br>';
+      tmp += '<strong>작성시각 : </strong>' + data[i].pub_date + '<br>';
+      tmp += '<strong>내용 : </strong>' + data[i].description + '<br>';
+      right += m_col(9, tmp)
+      tmp = data[i].created_time + ' (내용 수신)'+ '<br>';
+      switch(data[i].status) {
+          case 1:
+            tmp += data[i].update_time + '(알람여부 판단중)';
+            break;
+        case 2:
+            tmp += data[i].update_time + '(알람 발송)';
+            break;
+        case -1:
+            tmp += data[i].update_time + '(알람 패스)';
+      }
+      tmp += '<br>'
+      right += m_col(3, tmp);
+      right += m_row_end();
+      str += m_col(10, right);
+      str += m_row_end();
+      if (i != data.length -1) str += m_hr();
+  }
+  document.getElementById("list_div").innerHTML = str;
+
+}
+</script>
 {% endblock %}

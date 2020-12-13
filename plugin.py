@@ -13,14 +13,15 @@ from flask_login import login_required
 
 # sjva 공용
 from framework.logger import get_logger
-from framework import check_api, socketio
+from framework import app, db, scheduler, check_api
+from framework.util import Util
 
 # 패키지
 package_name = __name__.split('.')[0]
 logger = get_logger(package_name)
 from .logic import Logic
 from .logic_normal import LogicNormal
-from .model import ModelSetting
+from .model import ModelSetting, ModelFeed
 
 #########################################################
 # 플러그인 공용
@@ -29,7 +30,7 @@ blueprint = Blueprint(package_name, package_name, url_prefix='/%s' %  package_na
 menu = {
     'main' : [package_name, u'뽐뿌 알리미'],
     'sub' : [
-        ['setting', u'설정'], ['log', u'로그']
+        ['setting', u'설정'], ['list', u'목록'], ['log', u'로그']
     ],
     'category' : 'service'
 }
@@ -39,7 +40,7 @@ plugin_info = {
     'name' : package_name,
     'category_name' : 'service',
     'developer' : 'dbswnschl',
-    'description' : u'뽐부 알리미',
+    'description' : u'뽐뿌 알리미',
     'home' : 'https://github.com/dbswnschl/' + package_name,
     'more' : '',
 }
@@ -60,14 +61,12 @@ def home():
 @blueprint.route('/<sub>')
 @login_required
 def first_menu(sub):
+    arg = ModelSetting.to_dict()
+    arg['package_name'] = package_name
     try:
-        arg = {'package_name': package_name}
-
         if sub == 'setting':
-            arg.update(ModelSetting.to_dict())
-            arg['package_list'] = LogicNormal.get_youtube_dl_package()
-            arg['youtube_dl_version'] = LogicNormal.get_youtube_dl_version()
-            arg['DEFAULT_FILENAME'] = LogicNormal.get_default_filename()
+            arg['scheduler'] = str(scheduler.is_include(package_name))
+            arg['is_running'] = str(scheduler.is_running(package_name))
             return render_template('%s_%s.html' % (package_name, sub), arg=arg)
 
         elif sub == 'list':
@@ -79,8 +78,34 @@ def first_menu(sub):
         logger.error('Exception:%s', e)
         logger.error(traceback.format_exc())
     return render_template('sample.html', title='%s - %s' % (package_name, sub))
+
 #########################################################
-# socketio
+# For UI
 #########################################################
-def socketio_emit(cmd, data):
-    socketio.emit(cmd, LogicNormal.get_data(data), namespace='/%s' % package_name, broadcast=True)
+@blueprint.route('/ajax/<sub>', methods=['GET', 'POST'])
+@login_required
+def ajax(sub):
+    try:
+        if sub == 'setting_save':
+            ret = ModelSetting.setting_save(request)
+            return jsonify(ret)
+        elif sub == 'scheduler':
+            go = request.form['scheduler']
+            logger.debug('scheduler :%s', go)
+            if go == 'true':
+                Logic.scheduler_start()
+            else:
+                Logic.scheduler_stop()
+            return jsonify(go)
+        elif sub == 'one_execute':
+            ret = Logic.one_execute()
+            return jsonify(ret)
+        elif sub == 'reset_db':
+            ret = Logic.reset_db()
+            return jsonify(ret)
+        elif sub == 'web_list':
+            ret = ModelFeed.web_list(request)
+            return jsonify(ret)
+    except Exception as e:
+        logger.error('Exception:%s', e)
+        logger.error(traceback.format_exc())

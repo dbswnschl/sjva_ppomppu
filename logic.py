@@ -24,7 +24,13 @@ class Logic(object):
         'db_version': '1',
         'auto_start': 'False',
         'interval': '10',
-        'allow_duplicate': 'True'
+        'allow_duplicate': 'True',
+        'rss_url' : 'http://www.ppomppu.co.kr/rss.php?id=ppomppu',
+        'include_keyword' : '',
+        'exclude_keyword' : '',
+        'include_all': 'True',
+        'message_format': '[{title}] : {link}',
+        'bot_id' : 'bot_sjva_ppomppu'
     }
 
     @staticmethod
