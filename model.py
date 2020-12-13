@@ -6,9 +6,15 @@ import traceback
 import json
 import datetime
 # third-party
-from sqlalchemy import or_, and_, func, not_, desc
-from sqlalchemy.orm import backref
-
+try:
+    from sqlalchemy import or_, and_, func, not_, desc
+    from sqlalchemy.orm import backref
+except:
+    import subprocess
+    import sys
+    subprocess.check_output([sys.executable, '-m', 'pip', 'install', 'sqlalchemy'], universal_newlines=True)
+    from sqlalchemy import or_, and_, func, not_, desc
+    from sqlalchemy.orm import backref
 # sjva 공용
 from framework import db, app, path_app_root
 from framework.util import Util
