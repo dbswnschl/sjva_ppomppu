@@ -86,7 +86,7 @@
         let str = '';
         for (i in data) {
             str += m_row_start();
-            str += m_col(2, data[i].rss_id);
+            str += m_col(2, data[i].rss_id.toString());
             let right = m_row_start();
             tmp = ''
             tmp += '<strong>제목 : </strong>' + data[i].title + '<br>';
