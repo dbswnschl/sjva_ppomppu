@@ -56,7 +56,6 @@ class LogicNormal(object):
         for item in check_regex.finditer(getdata.text):
             data = item.groupdict()
             data['link'] = 'https://www.ppomppu.co.kr/zboard/zboard.php?' + ModelSetting.get('rss_url').split('rss.php?')[1] + '&no=' + data['rss_id']
-            logger.debug(data)
             datas.append(data)
         if len(datas) == 0 :
             logger.error('Did not regex parsing.')
