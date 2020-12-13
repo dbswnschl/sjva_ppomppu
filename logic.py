@@ -23,7 +23,7 @@ class Logic(object):
     db_default = {
         'db_version': '1',
         'auto_start': 'False',
-        'interval': '10',
+        'interval': '1',
         'allow_duplicate': 'True',
         'rss_url' : 'http://www.ppomppu.co.kr/rss.php?id=ppomppu',
         'include_keyword' : '',
