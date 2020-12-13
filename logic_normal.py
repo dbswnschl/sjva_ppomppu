@@ -6,10 +6,14 @@ import traceback
 from datetime import datetime
 import re
 import requests
-
 # third-party
-import feedparser
-
+try:
+    import feedparser
+except:
+    import subprocess
+    import sys
+    subprocess.check_output([sys.executable, '-m', 'pip', 'install', 'feedparser'], universal_newlines=True)
+    import feedparser
 # sjva 공용
 from framework import app, db, scheduler, path_app_root
 from framework.job import Job

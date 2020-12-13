@@ -36,7 +36,7 @@ menu = {
 }
 
 plugin_info = {
-    'version' : '0.2.0.0',
+    'version' : '0.2.1.0',
     'name' : package_name,
     'category_name' : 'service',
     'developer' : 'dbswnschl',
