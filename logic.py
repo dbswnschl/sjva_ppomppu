@@ -30,7 +30,8 @@ class Logic(object):
         'exclude_keyword' : '',
         'include_all': 'True',
         'message_format': '[{title}] : {link}',
-        'bot_id' : 'bot_sjva_ppomppu'
+        'bot_id' : 'bot_sjva_ppomppu',
+        'use_rss' : 'True'
     }
 
     @staticmethod

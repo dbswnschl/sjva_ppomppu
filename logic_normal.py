@@ -38,22 +38,47 @@ class LogicNormal(object):
 
     @staticmethod
     def get_rss(url):
-        data = []
+        datas = []
         getdata = requests.get(url=url)
         check_regex = re.compile(r'<item>\s+<title>(?P<title>.+)</title>\s+<link>(?P<link>.+no=(?P<rss_id>\d+))</link>\s+\<description\>(?P<description>[\w\W]*?)\<\/description\>\s+(?:<author>(?P<author>.+)</author>\s+)*<pubDate>(?P<pub_date>.*)</pubDate>')
         for item in reversed(list(check_regex.finditer(getdata.text))):
-            data.append(item.groupdict())
-        if len(data) == 0 :
+            datas.append(item.groupdict())
+        if len(datas) == 0 :
             logger.error('Did not regex parsing.')
             logger.error(getdata.text)
-        return data
+        return datas
+    @staticmethod
+    def get_crawl(url):
+        datas = []
+        getdata = requests.get(url=url)
+        check_regex = re.compile(r'<span class=list_name>(?P<author>.+)</span>[\w\W]*?\s+<a href=\".+no=(?P<rss_id>\d+)\"\s+><font class=list_title>(?P<title>.+)</font></a>[\w\W]*?<nobr class=\'eng list_vspace\'>(?P<pub_date>\d+:\d+:\d+|\d+/\d+/\d+)</td>')
+
+        for item in check_regex.finditer(getdata.text):
+            data = item.groupdict()
+            data['link'] = 'https://www.ppomppu.co.kr/zboard/zboard.php?' + ModelSetting.get('rss_url').split('rss.php?')[1] + '&no=' + data['rss_id']
+            logger.debug(data)
+            datas.append(data)
+        if len(datas) == 0 :
+            logger.error('Did not regex parsing.')
+            logger.error(getdata.text)
+        return datas
+
 
     @staticmethod
     def process_insert_feed():
-        datas = LogicNormal.get_rss(ModelSetting.get('rss_url'))
+        is_rss = ModelSetting.get_bool('use_rss')
+        if is_rss:
+            datas = LogicNormal.get_rss(ModelSetting.get('rss_url'))
+        else:
+            ppomppu_url = 'https://www.ppomppu.co.kr/zboard/zboard.php?' + ModelSetting.get('rss_url').split('rss.php?')[1]
+            logger.debug(ppomppu_url)
+            datas = LogicNormal.get_crawl(ppomppu_url)
+            logger.debug(datas)
         if len(datas) > 0 :
-            if ModelFeed.add_feed(datas) == 'success':
-                logger.debug('success')
+            if is_rss and ModelFeed.add_feed(datas) == 'success':
+                logger.debug('success1')
+            elif not is_rss and ModelFeed.add_feed(datas, False) == 'success':
+                logger.debug('success2')
             else:
                 logger.error('fail')
         else:
@@ -104,7 +129,7 @@ class LogicNormal(object):
         message_format = message_format.replace('{title}', data.title)
         message_format = message_format.replace('{link}', data.link)
         message_format = message_format.replace('{rss_id}', str(data.rss_id))
-        message_format = message_format.replace('{description}', data.description)
+        message_format = message_format.replace('{description}', data.description if data.description else '')
         message_format = message_format.replace('{pub_date}', str(data.pub_date))
         message_format = message_format.replace('{author}', data.author)
         return message_format

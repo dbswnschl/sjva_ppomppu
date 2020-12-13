@@ -16,6 +16,7 @@
             {{ macros.setting_global_scheduler_button(arg['scheduler'], arg['is_running']) }}
             {{ macros.setting_input_text('rss_url', '뽐뿌 RSS URL', value=arg['rss_url'], placeholder=arg['rss_url'],
             desc='뽐뿌 RSS URL 입력') }}
+            {{ macros.setting_checkbox('use_rss', 'RSS 사용 유무', value=arg['use_rss'], desc=['On : RSS, Off : 사이트 직접 크롤링','사이트 직접 크롤링시 속도는 빠르지만 description 내용은 수집되지 않습니다.']) }}
             {{ macros.setting_input_text('include_keyword', '포함 키워드', value=arg['include_keyword'],
             placeholder=arg['include_keyword'], desc=['포함 키워드','/정규식/ 사용 가능','쉼표(,)로 여러개 입력 가능']) }}
             {{ macros.setting_checkbox('include_all', '전체 포함', value=arg['include_all'], desc='On : 모든 키워드에 대해서 알람 설정을

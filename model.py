@@ -158,18 +158,24 @@ class ModelFeed(db.Model):
             logger.error(traceback.format_exc())
             return []
     @staticmethod
-    def add_feed(datas):
+    def add_feed(datas, is_rss = True):
         try:
             for data in datas:
                 entity = ModelFeed.get_feed(data)
                 if entity is None or len(entity) == 0:
                     r = ModelFeed()
-                    r.pub_date = datetime.datetime.strptime(data['pub_date'], '%b, %d %Y %H:%M:%S %Z')
+                    if is_rss:
+                        r.pub_date = datetime.datetime.strptime(data['pub_date'], '%b, %d %Y %H:%M:%S %Z')
+                        r.description = data['description'].replace('&nbsp;', ' ')
+                    else:
+                        if ':' in data['pub_date']:
+                            r.pub_date = datetime.datetime.strptime(data['pub_date'], '%H:%M:%S')
+                        else:
+                            r.pub_date = datetime.datetime.strptime(data['pub_date'], '%Y:%m:%d')
                     r.rss_id = int(data['rss_id'])
                     r.title = data['title']
                     r.author = data['author']
                     r.link = data['link'].replace('&amp;','&')
-                    r.description = data['description'].replace('&nbsp;',' ')
                     db.session.add(r)
                     db.session.commit()
             return 'success'
