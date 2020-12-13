@@ -98,13 +98,13 @@
             tmp = data[i].created_time + ' (내용 수신)' + '<br>';
             switch (data[i].status) {
                 case 1:
-                    tmp += data[i].update_time + '(알람여부 판단중)';
+                    tmp += data[i].update_time + ' (알람여부 판단중)';
                     break;
                 case 2:
-                    tmp += data[i].update_time + '(알람 발송)';
+                    tmp += data[i].update_time + ' (알람 발송)';
                     break;
                 case -1:
-                    tmp += data[i].update_time + '(알람 패스)';
+                    tmp += data[i].update_time + ' (알람 패스)';
             }
             tmp += '<br>'
             right += m_col(3, tmp);
