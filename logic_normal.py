@@ -71,9 +71,7 @@ class LogicNormal(object):
             datas = LogicNormal.get_rss(ModelSetting.get('rss_url'))
         else:
             ppomppu_url = 'https://www.ppomppu.co.kr/zboard/zboard.php?' + ModelSetting.get('rss_url').split('rss.php?')[1]
-            logger.debug(ppomppu_url)
             datas = LogicNormal.get_crawl(ppomppu_url)
-            logger.debug(datas)
         if len(datas) > 0 :
             if is_rss and ModelFeed.add_feed(datas) == 'success':
                 logger.debug('success1')
