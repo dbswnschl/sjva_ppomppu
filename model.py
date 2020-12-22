@@ -280,7 +280,7 @@ class ModelFeed(db.Model):
             query = query.filter(ModelFeed.status == -1)
 
         if order == 'desc':
-            query = query.order_by(desc(ModelFeed.rss_id))
+            query = query.order_by(desc(ModelFeed.created_time))
         else:
-            query = query.order_by(ModelFeed.rss_id)
+            query = query.order_by(ModelFeed.created_time)
         return query

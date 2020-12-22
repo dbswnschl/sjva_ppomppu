@@ -3,9 +3,14 @@
 
 # 설명
 원하는 키워드로 즉시 알림을 받을 수 있는 플러그인 입니다.  
-뽐뿌에서 제공하는 [rss 데이터](http://www.ppomppu.co.kr/rss.php?id=ppomppu)를 이용합니다.
+뽐뿌에서 제공하는 [rss 데이터](http://www.ppomppu.co.kr/rss.php?id=ppomppu) 를 이용합니다.
 
 # 업데이트
+### 0.3.0
+#### 여러 게시판 등록 기능 추가
+> rss url에 `,` 구분자를 이용하여 여러 게시판 등록 가능  
+> ex : 뽐뿌게시판, 해외뽐뿌게시판 : http://www.ppomppu.co.kr/rss.php?id=ppomppu,http://www.ppomppu.co.kr/rss.php?id=ppomppu4
+
 ### 0.2.0
 #### 직접 크롤링 기능 추가
 > RSS 피드가 업데이트 되는 속도가 느려 속도가 중요하신 분들을 위하여,  

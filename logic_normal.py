@@ -59,22 +59,43 @@ class LogicNormal(object):
 
         for item in check_regex.finditer(getdata.text):
             data = item.groupdict()
-            data['link'] = 'https://www.ppomppu.co.kr/zboard/view.php?' + ModelSetting.get('rss_url').split('rss.php?')[1] + '&no=' + data['rss_id']
+            data['link'] = 'https://www.ppomppu.co.kr/zboard/view.php?id=' + LogicNormal.get_board_ids(url)[0] + '&no=' + data['rss_id']
             datas.append(data)
         if len(datas) == 0 :
             logger.error('Did not regex parsing.')
             logger.error(getdata.text)
         return datas
-
-
+    @staticmethod
+    def get_board_ids(url_text=None):
+        if not url_text:
+            url_text = ModelSetting.get('rss_url')
+        result = []
+        if ',' in url_text:
+            url_arr = url_text.split(',')
+            url_arr = [x.strip() for x in url_arr]
+        else:
+            url_arr = [url_text.strip()]
+        for url in url_arr:
+            if 'id=' in url:
+                result.append(url.split('id=')[1].split('&')[0])
+            elif 'no=' in url:
+                result.append(url.split('no=')[1].split('&')[0])
+        return result
     @staticmethod
     def process_insert_feed():
         is_rss = ModelSetting.get_bool('use_rss')
+        rss_url = ModelSetting.get('rss_url')
+        if ',' in rss_url:
+            rss_url = rss_url.split(',')
+            rss_url = [x.strip() for x in rss_url]
+        datas = []
         if is_rss:
-            datas = LogicNormal.get_rss(ModelSetting.get('rss_url'))
+            for url in rss_url:
+                datas += LogicNormal.get_rss(url)
         else:
-            ppomppu_url = 'https://www.ppomppu.co.kr/zboard/zboard.php?' + ModelSetting.get('rss_url').split('rss.php?')[1]
-            datas = LogicNormal.get_crawl(ppomppu_url)
+            for url in rss_url:
+                datas +=LogicNormal.get_crawl('https://www.ppomppu.co.kr/zboard/zboard.php?id=' + LogicNormal.get_board_ids(url)[0])
+                logger.debug('https://www.ppomppu.co.kr/zboard/zboard.php?id=' + LogicNormal.get_board_ids(url)[0])
         if len(datas) > 0 :
             if is_rss and ModelFeed.add_feed(datas) == 'success':
                 logger.debug('success1')
