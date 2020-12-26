@@ -68,13 +68,16 @@ class LogicNormal(object):
     @staticmethod
     def get_board_ids(url_text=None):
         if not url_text:
-            url_text = ModelSetting.get('rss_url')
+            url_text = str(ModelSetting.get('rss_url'))
         result = []
-        if ',' in url_text:
+        if type(url_text) == str and ',' in url_text:
             url_arr = url_text.split(',')
             url_arr = [x.strip() for x in url_arr]
+        elif type(url_text) == str:
+            url_arr = []
+            url_arr.append(url_text.strip())
         else:
-            url_arr = [url_text.strip()]
+            url_arr = url_text
         for url in url_arr:
             if 'id=' in url:
                 result.append(url.split('id=')[1].split('&')[0])
@@ -84,7 +87,7 @@ class LogicNormal(object):
     @staticmethod
     def process_insert_feed():
         is_rss = ModelSetting.get_bool('use_rss')
-        rss_url = ModelSetting.get('rss_url')
+        rss_url = str(ModelSetting.get('rss_url'))
         if ',' in rss_url:
             rss_url = rss_url.split(',')
             rss_url = [x.strip() for x in rss_url]
