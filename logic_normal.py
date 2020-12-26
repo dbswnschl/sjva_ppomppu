@@ -88,6 +88,8 @@ class LogicNormal(object):
         if ',' in rss_url:
             rss_url = rss_url.split(',')
             rss_url = [x.strip() for x in rss_url]
+        else:
+            rss_url = [rss_url.split()]
         datas = []
         if is_rss:
             for url in rss_url:
