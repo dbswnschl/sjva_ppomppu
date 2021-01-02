@@ -20,7 +20,7 @@ from framework.job import Job
 from framework.util import Util
 from framework.common.rss import RssUtil
 from system.logic import SystemLogic
-import framework.common.notify as Notify
+from tool_base import ToolBaseNotify
 
 # 패키지
 from .plugin import logger, package_name
@@ -176,7 +176,7 @@ class LogicNormal(object):
             bot_id = ModelSetting.get('bot_id')
             if not bot_id:
                 bot_id = 'bot_sjva_ppomppu'
-            Notify.send_message(message, message_id=bot_id)
+            ToolBaseNotify.send_message(message, message_id=bot_id)
         except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
