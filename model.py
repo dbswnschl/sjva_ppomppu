@@ -177,7 +177,7 @@ class ModelFeed(db.Model):
                         if ':' in data['pub_date']:
                             r.pub_date = datetime.datetime.strptime(data['pub_date'], '%H:%M:%S')
                         elif '/' in data['pub_date']:
-                            r.pub_date = datetime.datetime.strptime(data['pub_date'], '%Y/%m/%d')
+                            r.pub_date = datetime.datetime.strptime(data['pub_date'], '%y/%m/%d')
                         else:
                             r.pub_date = datetime.datetime.strptime(data['pub_date'], '%Y:%m:%d')
                     r.rss_id = int(data['rss_id'])
