@@ -36,7 +36,7 @@ menu = {
 }
 
 plugin_info = {
-    'version' : '0.3.5.0',
+    'version' : '0.4.0.0',
     'name' : package_name,
     'category_name' : 'service',
     'developer' : 'dbswnschl',
@@ -105,6 +105,9 @@ def ajax(sub):
             return jsonify(ret)
         elif sub == 'web_list':
             ret = ModelFeed.web_list(request)
+            return jsonify(ret)
+        elif sub =='get_lp_site_code':
+            ret = LogicNormal.get_lp_site_code(request)
             return jsonify(ret)
     except Exception as e:
         logger.error('Exception:%s', e)

@@ -21,7 +21,7 @@ from .logic_normal import LogicNormal
 
 class Logic(object):
     db_default = {
-        'db_version': '1',
+        'db_version': '2',
         'auto_start': 'False',
         'interval': '1',
         'allow_duplicate': 'True',
@@ -29,9 +29,14 @@ class Logic(object):
         'include_keyword' : '',
         'exclude_keyword' : '',
         'include_all': 'True',
-        'message_format': '[{title}] : {link}',
+        'message_format': '[{title}] : {link}\n{mall_link}',
         'bot_id' : 'bot_sjva_ppomppu',
-        'use_rss' : 'True'
+        'use_rss' : 'True',
+        'use_mall_link':'True',
+        'lp_id' : '',
+        'lp_pw' : '',
+        'lp_site_code' : '',
+        'use_bot_lp_url': 'False'
     }
 
     @staticmethod
@@ -127,6 +132,16 @@ class Logic(object):
     @staticmethod
     def migration():
         try:
+            if ModelSetting.get('db_version') == '1':
+                import sqlite3
+                db_file = os.path.join(path_app_root, 'data', 'db', '%s.db' % package_name)
+                connection = sqlite3.connect(db_file)
+                cursor = connection.cursor()
+                query = 'ALTER TABLE %s_feed ADD mall_link VARCHAR' % (package_name)
+                cursor.execute(query)
+                connection.close()
+                ModelSetting.set('db_version', '2')
+                db.session.flush()
             pass
         except Exception as e:
             logger.error('Exception:%s', e)

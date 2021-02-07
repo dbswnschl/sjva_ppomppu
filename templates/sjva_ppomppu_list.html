@@ -91,6 +91,8 @@
             tmp = ''
             tmp += '<strong>제목 : </strong>' + data[i].title + '<br>';
             tmp += `<strong>링크 : </strong><a target="_blank" href="${data[i].link}">${data[i].link}</a><br>`;
+            if (data[i].mall_link)
+                tmp += `<strong>쇼핑몰 링크 : </strong><a target="_blank" href="${data[i].mall_link}">${data[i].mall_link}</a><br>`;
             tmp += '<strong>작성자 : </strong>' + data[i].author + '<br>';
             tmp += '<strong>작성시각 : </strong>' + data[i].pub_date + '<br>';
             tmp += '<strong>내용 : </strong>' + data[i].description + '<br>';

@@ -14,6 +14,14 @@ except:
     import sys
     subprocess.check_output([sys.executable, '-m', 'pip', 'install', 'feedparser'], universal_newlines=True)
     import feedparser
+try:
+    from selenium import webdriver
+except:
+    import subprocess
+    import sys
+    subprocess.check_output([sys.executable, '-m', 'pip', 'install', 'selenium'], universal_newlines=True)
+    from selenium import webdriver
+
 # sjva 공용
 from framework import app, db, scheduler, path_app_root
 from framework.job import Job
@@ -21,6 +29,7 @@ from framework.util import Util
 from framework.common.rss import RssUtil
 from system.logic import SystemLogic
 from tool_base import ToolBaseNotify
+from system import SystemLogicSelenium
 
 # 패키지
 from .plugin import logger, package_name
@@ -28,6 +37,7 @@ from .model import ModelSetting, ModelFeed
 #########################################################
 
 class LogicNormal(object):
+    driver = None
     @staticmethod
     def scheduler_function():
         try:
@@ -46,7 +56,13 @@ class LogicNormal(object):
         getdata = requests.get(url=url)
         check_regex = re.compile(r'<item>\s+<title>(?P<title>.+)</title>\s+<link>(?P<link>.+no=(?P<rss_id>\d+))</link>\s+\<description\>(?P<description>[\w\W]*?)\<\/description\>\s+(?:<author>(?P<author>.+)</author>\s+)*<pubDate>(?P<pub_date>.*)</pubDate>')
         for item in reversed(list(check_regex.finditer(getdata.text))):
-            datas.append(item.groupdict())
+            data = item.groupdict()
+            data['link'] = 'https://www.ppomppu.co.kr/zboard/view.php?id=' + LogicNormal.get_board_ids(url)[0] + '&no=' + data['rss_id']
+            if ModelSetting.get_bool('use_mall_link'):
+                data['mall_link'] = LogicNormal.get_mall_link(data['link'])
+                if ModelSetting.get_bool('use_bot_lp_url'):
+                    data['mall_link'] = LogicNormal.convert_link_price(data['mall_link'])
+            datas.append(data)
         if len(datas) == 0 :
             logger.error('Did not regex parsing.')
             logger.error(getdata.text)
@@ -60,6 +76,10 @@ class LogicNormal(object):
         for item in check_regex.finditer(getdata.text):
             data = item.groupdict()
             data['link'] = 'https://www.ppomppu.co.kr/zboard/view.php?id=' + LogicNormal.get_board_ids(url)[0] + '&no=' + data['rss_id']
+            if ModelSetting.get_bool('use_mall_link'):
+                data['mall_link'] = LogicNormal.get_mall_link(data['link'])
+                if ModelSetting.get_bool('use_bot_lp_url'):
+                    data['mall_link'] = LogicNormal.convert_link_price(data['mall_link'])
             datas.append(data)
         if len(datas) == 0 :
             logger.error('Did not regex parsing.')
@@ -159,6 +179,10 @@ class LogicNormal(object):
         message_format = message_format.replace('{description}', data.description if data.description else '')
         message_format = message_format.replace('{pub_date}', str(data.pub_date))
         message_format = message_format.replace('{author}', data.author)
+        message_format = message_format.replace('{mall_link}', data.mall_link if data.mall_link else '')
+        if type(message_format) != str:
+            message_format = message_format.encode('utf-8')
+        message_format = message_format.replace('\\n','\n')
         return message_format
     @staticmethod
     def process_check_alarm():
@@ -180,4 +204,71 @@ class LogicNormal(object):
         except Exception as e:
             logger.error('Exception:%s', e)
             logger.error(traceback.format_exc())
+
+    @staticmethod
+    def get_lp_site_code(req):
+        result = {'result':'-1'}
+        try:
+            if LogicNormal.driver is None:
+                LogicNormal.driver = SystemLogicSelenium.create_driver()
+            driver = LogicNormal.driver
+            data = req.form
+            lp_id = data['lp_id']
+            lp_pw = data['lp_pw']
+            try:
+                try:
+                    driver.get('https://ac.linkprice.net/login')
+                    driver.implicitly_wait(10)
+                    driver.find_element_by_xpath('//*[@id="content"]/div/form/div[1]/div[2]/div[1]/input').send_keys(lp_id)
+                    driver.find_element_by_xpath('//*[@id="content"]/div/form/div[1]/div[2]/div[2]/input').send_keys(lp_pw)
+                    driver.find_element_by_xpath('//*[@id="content"]/div/form/div[1]/div[2]/button').click()
+                    driver.implicitly_wait(10)
+                except:
+                    pass
+                driver.get('https://ac.linkprice.net/myinfo/commission')
+                driver.find_element_by_xpath('//*[@id="content"]/div/div/div[1]/div/div[1]/div/span[1]').click()
+                site_code = driver.find_element_by_xpath(
+                    '//*[@id="content"]/div/div/div[1]/div/div[1]/div/div[2]/div/div[2]/div[2]/table/tr[3]/td[2]').text.strip()
+                driver.implicitly_wait(10)
+                result['result'] = site_code
+            except Exception as exc:
+                logger.error(driver.page_source)
+                logger.error('Exception:%s', exc)
+                logger.error(traceback.format_exc())
+        except Exception as e:
+            logger.error('Exception:%s', e)
+            logger.error(traceback.format_exc())
+        return result
+    @staticmethod
+    def get_mall_link(pp_url):
+        # ppomppu url => mall url
+        sess = requests.session()
+        if type(pp_url) != str:
+            pp_url = pp_url.encode('utf-8')
+
+        getdata = sess.get(pp_url.replace('http://','https://').replace(' ','').strip())
+        title_text = getdata.text.split('<div class="bookmark-three-rung-menu-box">')[0]
+        check_title_regex = re.compile(r'<div class=\"*wordfix\"*>.{2}\:\s\<a\shref=.+target=\"*_blank\"*>(?P<market_url>.+)</a>')
+        matches = check_title_regex.search(str(title_text).decode('utf-8')) if check_title_regex and title_text else None
+        market_url = matches.groupdict()['market_url'].split('&amp;')[0].split('&nbsp;')[0] if matches else None
+        market_link = market_url.decode('utf-8') if market_url else None
+
+        if not matches:
+            logger.debug(getdata.url)
+            market_link = None
+        return market_link
+    @staticmethod
+    def convert_link_price(mall_link):
+        a_id = ModelSetting.get('lp_site_code')
+        result = mall_link
+        if mall_link and len(mall_link) > 0 and a_id and len(a_id) > 0:
+            import urllib
+            encoded_url = urllib.quote(mall_link.encode('utf-8'))
+            url = 'http://api.linkprice.com/ci/service/custom_link_xml?a_id={a_id}&url={encoded_url}&mode=json'.format(a_id=a_id,encoded_url=encoded_url)
+            sess = requests.session()
+            json_result = sess.get(url).json()
+            if 'S' in json_result['result'].upper():
+                result = json_result['url']
+        return result
+
 

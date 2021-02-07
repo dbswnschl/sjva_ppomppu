@@ -1,4 +1,12 @@
 {% extends "base.html" %}
+{% macro m_button_group(buttons) %}
+  <div class="btn-group btn-group-sm flex-wrap mr-2" role="group">
+    {% for item in buttons %}
+      <button id="{{item[0]}}" name="{{item[0]}}" class="btn btn-sm btn-outline-success">{{item[1]}}</button>
+    {% endfor %}
+  </div>
+{% endmacro %}
+
 {% block content %}
 <div>
     {{ macros.m_button_group([['global_setting_save_btn', '설정 저장']])}}
@@ -7,6 +15,7 @@
     <nav>
         {{ macros.m_tab_head_start() }}
         {{ macros.m_tab_head2('normal', '일반', true) }}
+        {{ macros.m_tab_head2('lp', '링크 프라이스', false) }}
         {{ macros.m_tab_head2('action', '기타', false) }}
         {{ macros.m_tab_head_end() }}
     </nav>
@@ -16,22 +25,36 @@
             {{ macros.setting_global_scheduler_button(arg['scheduler'], arg['is_running']) }}
             {{ macros.setting_input_text('rss_url', '뽐뿌 RSS URL', value=arg['rss_url'], placeholder=arg['rss_url'],
             desc=['뽐뿌 RSS URL 입력','여러 게시판 원할시 쉼표로 분리']) }}
-            {{ macros.setting_checkbox('use_rss', 'RSS 사용 유무', value=arg['use_rss'], desc=['On : RSS, Off : 사이트 직접 크롤링','사이트 직접 크롤링시 속도는 빠르지만 description 내용은 수집되지 않습니다.']) }}
+            {{ macros.setting_checkbox('use_rss', 'RSS 사용 유무', value=arg['use_rss'], desc=['On : RSS, Off : 사이트 직접
+            크롤링','사이트 직접 크롤링시 속도는 빠르지만 description 내용은 수집되지 않습니다.']) }}
             {{ macros.setting_input_text('include_keyword', '포함 키워드', value=arg['include_keyword'],
             placeholder=arg['include_keyword'], desc=['포함 키워드','/정규식/ 사용 가능','쉼표(,)로 여러개 입력 가능']) }}
             {{ macros.setting_checkbox('include_all', '전체 포함', value=arg['include_all'], desc='On : 모든 키워드에 대해서 알람 설정을
             포함 합니다.') }}
             {{ macros.setting_input_text('exclude_keyword', '제외 키워드', value=arg['exclude_keyword'],
             placeholder=arg['exclude_keyword'], desc=['제외 키워드','/정규식/ 사용 가능','쉼표(,)로 여러개 입력 가능']) }}
+            {{ macros.setting_checkbox('use_mall_link', '쇼핑몰 링크 가져오기', value=arg['use_mall_link'], desc=['게시글 안의 링크를 분석하여 쇼핑몰 링크를 가져옵니다.']) }}
             {{ macros.setting_input_text('bot_id', '알람 봇 ID', value=arg['bot_id'],
             placeholder=arg['bot_id'], desc=['봇 ID 입력', 'default ID : bot_sjva_ppomppu']) }}
             {{ macros.setting_input_text('message_format', '메시지 포맷', value=arg['message_format'],
             placeholder=arg['exclude_keyword'], desc=['알림 받을 메시지의 포맷, {키워드} 로 사용', 'title : 제목', 'link :
-            게시글 주소', 'description : 설명', 'pub_date: 생성시각', '예시 : [{title}] : {link}']) }}
+            게시글 주소', 'description : 설명', 'pub_date: 생성시각', 'mall_link: 쇼핑몰 주소(쇼핑몰 링크 가져오기 옵션이 켜져있어야 함)', '예시 : [{title}] : {link}']) }}
             {{ macros.setting_input_text('interval', '스케쥴링 실행 정보', value=arg['interval'], col='3',
             desc=['Inverval(minute 단위)이나 Cron 설정']) }}
             {{ macros.setting_checkbox('auto_start', '시작시 자동실행', value=arg['auto_start'], desc='On : 시작시 자동으로 스케쥴러에
             등록됩니다.') }}
+            {{ macros.m_tab_content_end() }}
+            {{ macros.m_tab_content_start('lp', false) }}
+            {{ macros.setting_input_text('lp_id', '링크 프라이스 ID', value=arg['lp_id'], placeholder=arg['lp_id'],
+            desc=['링크 프라이스 사이트 코드를 가져오는 데 사용됩니다.']) }}
+            {{ macros.setting_input_text('lp_pw', '링크 프라이스 PW', value=arg['lp_pw'], placeholder=arg['lp_pw'],
+            desc=['링크 프라이스 사이트 코드를 가져오는 데 사용됩니다.'], type='password') }}
+            {{ macros.setting_button([['get_lp_site_code', '사이트 코드 가져오기']], left='사이트 코드 가져오기 (selenium 사용)')}}
+            {{ macros.setting_input_text('lp_site_code', '링크 프라이스 사이트 코드', value=arg['lp_site_code'],
+            placeholder=arg['lp_site_code'],
+            desc=['링크 프라이스 사이트 코드']) }}
+            {{ macros.setting_checkbox('use_bot_lp_url', '가능한 경우 쇼핑몰 URL 변환', value=arg['use_bot_lp_url'], desc='On : 쇼핑몰 url을 링크프라이스 제휴 url로 변환합니다. (가능한 경우만)') }}
+
             {{ macros.m_tab_content_end() }}
             {{ macros.m_tab_content_start('action', false) }}
             {{ macros.setting_button([['global_one_execute_btn', '1회 실행']], left='1회 실행' ) }}
@@ -41,11 +64,39 @@
     </form>
 </div> <!--전체-->
 
-<script type="text/javascript">
-    var package_name = "{{arg['package_name'] }}";
 
-    $(document).ready(function () {
+<script type="text/javascript">
+    let package_name = "{{ arg['package_name'] }}";
+    $(document).ready(()=> {
+        $('#get_lp_site_code').off('click').click((evt) => {
+            let lp_id = $('#lp_id').val();
+            let lp_pw = $('#lp_pw').val();
+            console.log(`/${package_name}/ajax/get_lp_site_code`);
+            if (lp_id.length > 0 && lp_pw.length > 0) {
+                $.ajax({
+                    url: `/${package_name}/ajax/get_lp_site_code`,
+                    type: 'POST',
+                    cache: false,
+                    data: {
+                        lp_id: lp_id,
+                        lp_pw: lp_pw
+                    },
+                    dataType: 'json'
+                }).done((res)=>{
+                        $('#lp_site_code').val(res.result);
+                        $.notify(`<strong>링크프라이스 사이트 코드를 가져오는데 성공했습니다</strong>`, {type: 'info'});
+                }).fail((res2)=>{
+                        $.notify(`<strong>링크프라이스 사이트 코드를 가져오는데 실패했습니다.</strong>`, {type: 'danger'});
+                        console.log(res2);
+                });
+            } else {
+                $.notify(`<strong>링크프라이스 정보를 입력해 주세요.</strong>`, {type: 'danger'});
+            }
+            return false;
+        })
     });
+
+
 
 </script>
 {% endblock %}

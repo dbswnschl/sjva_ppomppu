@@ -137,6 +137,7 @@ class ModelFeed(db.Model):
     description = db.Column(db.String)
     link = db.Column(db.String)
     status = db.Column(db.Integer) # -1 : 통과, 0 : 최초, 1: 알람준비, 2: 알람완료
+    mall_link = db.Column(db.String)
     def __init__(self):
         self.created_time = datetime.datetime.now()
         self.update_time = datetime.datetime.now()
@@ -147,8 +148,8 @@ class ModelFeed(db.Model):
     def as_dict(self):
         ret = {x.name: getattr(self, x.name) for x in self.__table__.columns}
         ret['created_time'] = self.created_time.strftime('%m-%d %H:%M:%S')
-        ret['update_time'] = self.created_time.strftime('%m-%d %H:%M:%S')
-        ret['pub_date'] = self.created_time.strftime('%m-%d %H:%M:%S')
+        ret['update_time'] = self.update_time.strftime('%m-%d %H:%M:%S')
+        ret['pub_date'] = self.pub_date.strftime('%m-%d %H:%M:%S')
         return ret
 
     @staticmethod
@@ -175,7 +176,7 @@ class ModelFeed(db.Model):
                         r.description = data['description'].replace('&nbsp;', ' ')
                     else:
                         if ':' in data['pub_date']:
-                            r.pub_date = datetime.datetime.strptime(data['pub_date'], '%H:%M:%S')
+                            r.pub_date = datetime.datetime.strptime(str(datetime.datetime.now().date())+' '+data['pub_date'], '%Y-%m-%d %H:%M:%S')
                         elif '/' in data['pub_date']:
                             r.pub_date = datetime.datetime.strptime(data['pub_date'], '%y/%m/%d')
                         else:
@@ -184,6 +185,9 @@ class ModelFeed(db.Model):
                     r.title = data['title']
                     r.author = data['author']
                     r.link = data['link'].replace('&amp;','&')
+                    r.mall_link = data['mall_link'] if 'mall_link' in data else None
+
+
                     db.session.add(r)
                     db.session.commit()
             return 'success'
@@ -282,7 +286,7 @@ class ModelFeed(db.Model):
             query = query.filter(ModelFeed.status == -1)
 
         if order == 'desc':
-            query = query.order_by(desc(ModelFeed.created_time))
+            query = query.order_by(desc(ModelFeed.pub_date))
         else:
-            query = query.order_by(ModelFeed.created_time)
+            query = query.order_by(ModelFeed.pub_date)
         return query
