@@ -6,6 +6,10 @@
 뽐뿌에서 제공하는 [rss 데이터](http://www.ppomppu.co.kr/rss.php?id=ppomppu) 를 이용합니다.
 
 # 업데이트
+### 0.4.1
+#### Python3버전 대응
+> python3에서 string decode 에러가 발생하는 현상 대응
+
 ### 0.4.0
 #### 신규 기능 추가
 > 쇼핑몰 링크 가져오기 기능 추가 (설정 - 일반 - 쇼핑몰 링크 가져오기)  

@@ -249,9 +249,17 @@ class LogicNormal(object):
         getdata = sess.get(pp_url.replace('http://','https://').replace(' ','').strip())
         title_text = getdata.text.split('<div class="bookmark-three-rung-menu-box">')[0]
         check_title_regex = re.compile(r'<div class=\"*wordfix\"*>.{2}\:\s\<a\shref=.+target=\"*_blank\"*>(?P<market_url>.+)</a>')
-        matches = check_title_regex.search(str(title_text).decode('utf-8')) if check_title_regex and title_text else None
+        if type(title_text) != str:
+            matches = check_title_regex.search(str(title_text).decode('utf-8')) if check_title_regex and title_text else None
+        else:
+            matches = check_title_regex.search(title_text) if check_title_regex and title_text else None
+
         market_url = matches.groupdict()['market_url'].split('&amp;')[0].split('&nbsp;')[0] if matches else None
-        market_link = market_url.decode('utf-8') if market_url else None
+
+        if type(market_url) != str:
+            market_link = market_url.decode('utf-8') if market_url else None
+        else:
+            market_link = market_url if market_url else None
 
         if not matches:
             logger.debug(getdata.url)
@@ -262,8 +270,12 @@ class LogicNormal(object):
         a_id = ModelSetting.get('lp_site_code')
         result = mall_link
         if mall_link and len(mall_link) > 0 and a_id and len(a_id) > 0:
-            import urllib
-            encoded_url = urllib.quote(mall_link.encode('utf-8'))
+            try:
+                import urllib
+                encoded_url = urllib.quote(mall_link.encode('utf-8'))
+            except:
+                import urllib.parse
+                encoded_url = urllib.parse.quote(mall_link)
             url = 'http://api.linkprice.com/ci/service/custom_link_xml?a_id={a_id}&url={encoded_url}&mode=json'.format(a_id=a_id,encoded_url=encoded_url)
             sess = requests.session()
             json_result = sess.get(url).json()
