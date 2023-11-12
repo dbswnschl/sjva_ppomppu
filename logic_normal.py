@@ -71,7 +71,7 @@ class LogicNormal(object):
     def get_crawl(url):
         datas = []
         getdata = requests.get(url=url)
-        check_regex = re.compile(r'<span class=list_name>(?P<author>.+)</span>[\w\W]*?\s+<a href=\".+no=(?P<rss_id>\d+)\"\s+><font class=list_title>(?P<title>.+)</font></a>[\w\W]*?<nobr class=\'eng list_vspace\'>(?P<pub_date>\d+:\d+:\d+|\d+/\d+/\d+)</td>')
+        check_regex = re.compile(r'<span class=list_name>(?P<author>.+)</span>[\w\W]*?\s+<a href=\".+no=(?P<rss_id>\d+)\"\s+><font class=list_title>(?:<span class=\".+\">)?(?P<title>.+)</font></a>[\w\W]*?<nobr class=\'eng list_vspace\'>(?P<pub_date>\d+:\d+:\d+|\d+/\d+/\d+)</td>')
 
         for item in check_regex.finditer(getdata.text):
             data = item.groupdict()
