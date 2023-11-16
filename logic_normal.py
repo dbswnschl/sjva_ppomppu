@@ -75,6 +75,7 @@ class LogicNormal(object):
 
         for item in check_regex.finditer(getdata.text):
             data = item.groupdict()
+            data['title'] = data['title'].replace("</span>", "")
             data['link'] = 'https://www.ppomppu.co.kr/zboard/view.php?id=' + LogicNormal.get_board_ids(url)[0] + '&no=' + data['rss_id']
             if ModelSetting.get_bool('use_mall_link'):
                 data['mall_link'] = LogicNormal.get_mall_link(data['link'])
